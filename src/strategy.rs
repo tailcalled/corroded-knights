@@ -1,5 +1,6 @@
 pub mod user;
 pub mod random;
+pub mod minimax;
 
 use crate::board::*;
 

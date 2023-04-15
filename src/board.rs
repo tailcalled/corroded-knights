@@ -47,6 +47,15 @@ impl Color {
         }
     }
 }
+impl std::fmt::Display for Color {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        use Color::*;
+        match self {
+            White => write!(f, "White"),
+            Black => write!(f, "Black"),
+        }
+    }
+}
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Piece {
@@ -368,6 +377,28 @@ impl Board {
         else {
             self.moves_since_progress = 0;
         }
+    }
+    pub fn consider_move<T>(&mut self, mv: Move, f: impl FnOnce(&mut Board) -> T) -> T {
+        let prev_castling = self.castling;
+        let prev_en_passant = self.en_passant_file;
+        let prev_progress = self.moves_since_progress;
+        self.apply_move(mv);
+        let res = f(self);
+        // Undo move
+        if let Some(castle_move) = mv.castle {
+            self[castle_move.rook_to] = None;
+            self[castle_move.rook_from] = Some(castle_move.rook);
+        }
+        self[mv.from] = Some(mv.piece);
+        self[mv.to] = None;
+        if let Some((attacked, loc)) = mv.attack {
+            self[loc] = Some(attacked);
+        }
+        self.castling = prev_castling;
+        self.en_passant_file = prev_en_passant;
+        self.moves_since_progress = prev_progress;
+        self.turn = self.turn.opposite();
+        res
     }
     pub fn win_state(&self) -> WinState {
         if self.moves_since_progress >= 50 {

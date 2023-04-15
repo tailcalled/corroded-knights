@@ -1,6 +1,6 @@
 use crate::board::*;
-use rand::prelude::*;
 use crate::strategy::Strategy;
+use rand::prelude::*;
 
 pub struct Random(StdRng);
 
